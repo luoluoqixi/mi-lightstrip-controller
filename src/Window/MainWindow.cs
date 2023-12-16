@@ -14,6 +14,7 @@ namespace mi_lightstrip_controller
         {
             InitializeComponent();
             FormClosing += MainWindow_FormClosing;
+            Shown += MainWindow_FormShown;
             Init();
         }
         private void Init()
@@ -23,11 +24,62 @@ namespace mi_lightstrip_controller
             autoOpenLightStrip.Checked = Setting.Instance.AutoOpenLightStrip;
             autoCloseLightStrip.Checked = Setting.Instance.AutoCloseLightStrip;
             closeHideWindow.Checked = Setting.Instance.ClickCloseMinimize;
-        }
+            autoMinimize.Checked = Setting.Instance.AutoMinimize;
+            currentComText.Text = Setting.Instance.Com;
+            toggleLightStrip.Checked = false;
 
+            if (string.IsNullOrEmpty(Setting.Instance.Com))
+            {
+                AutoSelectCom();
+            }
+            else
+            {
+                SetComText(Setting.Instance.Com);
+                if (Setting.Instance.AutoOpenLightStrip)
+                {
+                    connect.OpenLightStrip(true);
+                    UpdateState();
+                }
+            }
+            if (Setting.Instance.AutoMinimize)
+            {
+                ShowInTaskbar = false;
+                Opacity = 0;
+            }
+        }
+        private void SetComText(string comText)
+        {
+            Setting.Instance.Com = comText;
+            currentComText.Text = comText;
+            connect.SetCom(comText);
+        }
+        private string AutoSelectCom()
+        {
+            var comList = SelectComListWindow.GetComList();
+            int findIndex = comList.FindIndex(com => com.ToLower().Contains("ch340"));
+            if (findIndex < 0)
+            {
+                MessageBox.Show("未找到灯带串口，请手动选择", "提示", MessageBoxButtons.OK);
+                return null;
+            }
+            else
+            {
+                string comText = comList[findIndex];
+                SetComText(comText);
+                return comText;
+            }
+        }
+        private void UpdateState()
+        {
+            toggleLightStrip.Checked = connect.State;
+        }
         private void ToggleLightStrip_CheckedChanged(object sender, EventArgs e)
         {
-            connect.ToggleLightStrip();
+            connect.OpenLightStrip(toggleLightStrip.Checked);
+            if (connect.State != toggleLightStrip.Checked)
+            {
+                UpdateState();
+            }
         }
         private void QuitProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -38,10 +90,12 @@ namespace mi_lightstrip_controller
         private void CloseLightStripToolStripMenuItem_Click(object sender, EventArgs e)
         {
             connect.OpenLightStrip(false);
+            UpdateState();
         }
         private void OpenLightStripToolStripMenuItem_Click(object sender, EventArgs e)
         {
             connect.OpenLightStrip(true);
+            UpdateState();
         }
         private void IsAutoStarup_CheckedChanged(object sender, EventArgs e)
         {
@@ -70,10 +124,28 @@ namespace mi_lightstrip_controller
             if (closeHideWindow.Checked != Setting.Instance.ClickCloseMinimize)
                 Setting.Instance.ClickCloseMinimize = closeHideWindow.Checked;
         }
+        private void AutoMinimize_CheckedChanged(object sender, EventArgs e)
+        {
+            if (autoMinimize.Checked != Setting.Instance.AutoMinimize)
+                Setting.Instance.AutoMinimize = autoMinimize.Checked;
+            
+        }
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = true;
-            Visible = false;
+            if (Setting.Instance.ClickCloseMinimize)
+            {
+                e.Cancel = true;
+                Visible = false;
+            }
+        }
+        private void MainWindow_FormShown(object sender, EventArgs e)
+        {
+            if (Setting.Instance.AutoMinimize)
+            {
+                Hide();
+                ShowInTaskbar = true;
+                Opacity = 1;
+            }
         }
         private void MainNotifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
@@ -91,8 +163,22 @@ namespace mi_lightstrip_controller
             string com = SelectComListWindow.GetSelectCom();
             if (!string.IsNullOrEmpty(com))
             {
-                currentComText.Text = com;
+                SetComText(com);
             }
+        }
+        private void AutoSelectBtn_Click(object sender, EventArgs e)
+        {
+            string comText = AutoSelectCom();
+            if (!string.IsNullOrEmpty(comText))
+            {
+                MessageBox.Show("找到串口: " + comText, "提示", MessageBoxButtons.OK);
+            }
+        }
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+            if (connect != null)
+                connect.OpenLightStrip(false, false);
         }
     }
 }
