@@ -182,6 +182,7 @@ namespace mi_lightstrip_controller
         }
         private void AutoClose()
         {
+            if (!Setting.Instance.AutoCloseLightStrip) return;
             if (connect != null)
                 connect.OpenLightStrip(false, false);
         }
