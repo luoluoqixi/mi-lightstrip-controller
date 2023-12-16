@@ -1,6 +1,7 @@
 ﻿using mi_lightstrip_controller.src.Lightstrip;
 using mi_lightstrip_controller.src.Setting;
 using mi_lightstrip_controller.src.Window;
+using Microsoft.Win32;
 using System;
 using System.Windows.Forms;
 
@@ -183,6 +184,14 @@ namespace mi_lightstrip_controller
         {
             if (connect != null)
                 connect.OpenLightStrip(false, false);
+        }
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == 0x11) // 关机
+            {
+                AutoClose();
+            }
+            base.WndProc(ref m);
         }
     }
 }
