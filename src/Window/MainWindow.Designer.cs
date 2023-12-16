@@ -37,6 +37,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.autoSelectBtn = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.autoMinimize = new System.Windows.Forms.CheckBox();
             this.closeHideWindow = new System.Windows.Forms.CheckBox();
             this.autoCloseLightStrip = new System.Windows.Forms.CheckBox();
             this.autoOpenLightStrip = new System.Windows.Forms.CheckBox();
@@ -63,7 +64,7 @@
             this.comGroup.Controls.Add(this.autoSelectBtn);
             this.comGroup.Location = new System.Drawing.Point(13, 13);
             this.comGroup.Name = "comGroup";
-            this.comGroup.Size = new System.Drawing.Size(1148, 424);
+            this.comGroup.Size = new System.Drawing.Size(1148, 438);
             this.comGroup.TabIndex = 99;
             this.comGroup.TabStop = false;
             this.comGroup.Text = "灯带控制";
@@ -117,21 +118,34 @@
             this.autoSelectBtn.TabIndex = 2;
             this.autoSelectBtn.Text = "自动识别";
             this.autoSelectBtn.UseVisualStyleBackColor = true;
+            this.autoSelectBtn.Click += new System.EventHandler(this.AutoSelectBtn_Click);
             // 
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.autoMinimize);
             this.groupBox1.Controls.Add(this.closeHideWindow);
             this.groupBox1.Controls.Add(this.autoCloseLightStrip);
             this.groupBox1.Controls.Add(this.autoOpenLightStrip);
             this.groupBox1.Controls.Add(this.isAutoStarup);
-            this.groupBox1.Location = new System.Drawing.Point(13, 443);
+            this.groupBox1.Location = new System.Drawing.Point(13, 457);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1148, 266);
+            this.groupBox1.Size = new System.Drawing.Size(1148, 314);
             this.groupBox1.TabIndex = 98;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "设置";
+            // 
+            // autoMinimize
+            // 
+            this.autoMinimize.AutoSize = true;
+            this.autoMinimize.Location = new System.Drawing.Point(34, 258);
+            this.autoMinimize.Name = "autoMinimize";
+            this.autoMinimize.Size = new System.Drawing.Size(287, 31);
+            this.autoMinimize.TabIndex = 8;
+            this.autoMinimize.Text = "启动时最小化到托盘";
+            this.autoMinimize.UseVisualStyleBackColor = true;
+            this.autoMinimize.CheckedChanged += new System.EventHandler(this.AutoMinimize_CheckedChanged);
             // 
             // closeHideWindow
             // 
@@ -222,7 +236,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 27F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(1172, 721);
+            this.ClientSize = new System.Drawing.Size(1172, 783);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.comGroup);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -256,6 +270,7 @@
         private System.Windows.Forms.ToolStripMenuItem 开启灯带ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 关闭灯带ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 退出程序ToolStripMenuItem;
+        private System.Windows.Forms.CheckBox autoMinimize;
     }
 }
 

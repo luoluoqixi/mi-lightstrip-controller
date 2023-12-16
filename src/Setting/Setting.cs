@@ -66,10 +66,20 @@ namespace mi_lightstrip_controller.src.Setting
             get { return GetValue("AutoCloseLightStrip", true); }
             set { SetValue("AutoCloseLightStrip", value); }
         }
+        public bool AutoMinimize
+        {
+            get { return GetValue("AutoMinimize", false); }
+            set { SetValue("AutoMinimize", value); }
+        }
         public bool ClickCloseMinimize
         {
             get { return GetValue("ClickCloseMinimize", true); }
             set { SetValue("ClickCloseMinimize", value); }
+        }
+        public string Com
+        {
+            get { return GetValue("Com", ""); }
+            set { SetValue("Com", value); }
         }
 
         private static int GetValue(string key, int defaultValue = 0)
