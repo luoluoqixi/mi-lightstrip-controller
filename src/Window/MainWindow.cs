@@ -83,6 +83,7 @@ namespace mi_lightstrip_controller
         }
         private void QuitProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            AutoClose();
             mainNotifyIcon.Visible = false;
             Dispose();
             Application.Exit();
@@ -137,6 +138,10 @@ namespace mi_lightstrip_controller
                 e.Cancel = true;
                 Visible = false;
             }
+            else
+            {
+                AutoClose();
+            }
         }
         private void MainWindow_FormShown(object sender, EventArgs e)
         {
@@ -174,9 +179,8 @@ namespace mi_lightstrip_controller
                 MessageBox.Show("找到串口: " + comText, "提示", MessageBoxButtons.OK);
             }
         }
-        protected override void OnFormClosed(FormClosedEventArgs e)
+        private void AutoClose()
         {
-            base.OnFormClosed(e);
             if (connect != null)
                 connect.OpenLightStrip(false, false);
         }
