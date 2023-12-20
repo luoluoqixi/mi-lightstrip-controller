@@ -1,7 +1,7 @@
-﻿using mi_lightstrip_controller.src.Lightstrip;
+﻿using mi_lightstrip_controller.src.Com;
+using mi_lightstrip_controller.src.Lightstrip;
 using mi_lightstrip_controller.src.Setting;
 using mi_lightstrip_controller.src.Window;
-using Microsoft.Win32;
 using System;
 using System.Windows.Forms;
 
@@ -27,7 +27,8 @@ namespace mi_lightstrip_controller
             closeHideWindow.Checked = Setting.Instance.ClickCloseMinimize;
             autoMinimize.Checked = Setting.Instance.AutoMinimize;
             currentComText.Text = Setting.Instance.Com;
-            toggleLightStrip.Checked = false;
+            closeBtn.Checked = true;
+            openBtn.Checked = false;
 
             if (string.IsNullOrEmpty(Setting.Instance.Com))
             {
@@ -35,11 +36,19 @@ namespace mi_lightstrip_controller
             }
             else
             {
-                SetComText(Setting.Instance.Com);
-                if (Setting.Instance.AutoOpenLightStrip)
+                var com = ComUtility.FindCom(Setting.Instance.Com);
+                if (com != null)
                 {
-                    connect.OpenLightStrip(true);
-                    UpdateState();
+                    SetCom(com);
+                    if (Setting.Instance.AutoOpenLightStrip)
+                    {
+                        connect.OpenLightStrip(true);
+                        UpdateState();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("保存的串口未找到: " + Setting.Instance.Com, "错误", MessageBoxButtons.OK);
                 }
             }
             if (Setting.Instance.AutoMinimize)
@@ -48,39 +57,41 @@ namespace mi_lightstrip_controller
                 Opacity = 0;
             }
         }
-        private void SetComText(string comText)
+        private void SetCom(ComObj com)
         {
-            Setting.Instance.Com = comText;
-            currentComText.Text = comText;
-            connect.SetCom(comText);
+            Setting.Instance.Com = com.name;
+            currentComText.Text = com.GetShowText();
+            connect.SetCom(com);
         }
-        private string AutoSelectCom()
+        private ComObj AutoSelectCom()
         {
-            var comList = SelectComListWindow.GetComList();
-            int findIndex = comList.FindIndex(com => com.ToLower().Contains("ch340"));
-            if (findIndex < 0)
+            var coms = ComUtility.GetComs();
+            foreach (var com in coms)
             {
-                MessageBox.Show("未找到灯带串口，请手动选择", "提示", MessageBoxButtons.OK);
-                return null;
+                if (com.Key.ToLower().Contains("ch340"))
+                {
+                    SetCom(com.Value);
+                    return com.Value;
+                }
             }
-            else
-            {
-                string comText = comList[findIndex];
-                SetComText(comText);
-                return comText;
-            }
+            MessageBox.Show("未找到灯带串口，请手动选择", "提示", MessageBoxButtons.OK);
+            return null;
         }
         private void UpdateState()
         {
-            toggleLightStrip.Checked = connect.State;
+            openBtn.Checked = connect.State;
+            closeBtn.Checked = !connect.State;
         }
-        private void ToggleLightStrip_CheckedChanged(object sender, EventArgs e)
+        private void OpenBtn_CheckedChanged(object sender, EventArgs e)
         {
-            connect.OpenLightStrip(toggleLightStrip.Checked);
-            if (connect.State != toggleLightStrip.Checked)
+            if (connect.State != openBtn.Checked)
             {
-                UpdateState();
+                connect.OpenLightStrip(openBtn.Checked);
             }
+        }
+        private void CloseBtn_CheckedChanged(object sender, EventArgs e)
+        {
+            // 状态改变时open与close都会自动执行，只需要写在一个监听中即可
         }
         private void QuitProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -166,25 +177,31 @@ namespace mi_lightstrip_controller
         }
         private void ManualSelectBtn_Click(object sender, EventArgs e)
         {
-            string com = SelectComListWindow.GetSelectCom();
-            if (!string.IsNullOrEmpty(com))
+            var com = SelectComListWindow.GetSelectCom();
+            if (com != null)
             {
-                SetComText(com);
+                SetCom(com);
             }
         }
         private void AutoSelectBtn_Click(object sender, EventArgs e)
         {
-            string comText = AutoSelectCom();
-            if (!string.IsNullOrEmpty(comText))
+            var com = AutoSelectCom();
+            if (com != null)
             {
-                MessageBox.Show("找到串口: " + comText, "提示", MessageBoxButtons.OK);
+                MessageBox.Show("找到串口: " + com.GetShowText(), "提示", MessageBoxButtons.OK);
             }
         }
         private void AutoClose()
         {
-            if (!Setting.Instance.AutoCloseLightStrip) return;
+            if (Setting.Instance.AutoCloseLightStrip)
+            {
+                if (connect != null)
+                    connect.OpenLightStrip(false, false);
+            }
             if (connect != null)
-                connect.OpenLightStrip(false, false);
+            {
+                connect.Close();
+            }
         }
         protected override void WndProc(ref Message m)
         {

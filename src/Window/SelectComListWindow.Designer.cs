@@ -40,7 +40,8 @@
             // 
             // refreshBtn
             // 
-            this.refreshBtn.Location = new System.Drawing.Point(624, 57);
+            this.refreshBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.refreshBtn.Location = new System.Drawing.Point(985, 57);
             this.refreshBtn.Name = "refreshBtn";
             this.refreshBtn.Size = new System.Drawing.Size(100, 50);
             this.refreshBtn.TabIndex = 4;
@@ -59,11 +60,13 @@
             // 
             // comListDropdown
             // 
+            this.comListDropdown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.comListDropdown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comListDropdown.FormattingEnabled = true;
             this.comListDropdown.Location = new System.Drawing.Point(235, 57);
             this.comListDropdown.Name = "comListDropdown";
-            this.comListDropdown.Size = new System.Drawing.Size(383, 35);
+            this.comListDropdown.Size = new System.Drawing.Size(744, 35);
             this.comListDropdown.TabIndex = 0;
             this.comListDropdown.SelectedIndexChanged += new System.EventHandler(this.ComListDropdown_SelectedIndexChanged);
             // 
@@ -76,7 +79,7 @@
             this.comGroup.Controls.Add(this.comListDropdown);
             this.comGroup.Location = new System.Drawing.Point(12, 12);
             this.comGroup.Name = "comGroup";
-            this.comGroup.Size = new System.Drawing.Size(750, 128);
+            this.comGroup.Size = new System.Drawing.Size(1111, 128);
             this.comGroup.TabIndex = 2;
             this.comGroup.TabStop = false;
             this.comGroup.Text = "选择串口";
@@ -84,7 +87,7 @@
             // saveConfigBtn
             // 
             this.saveConfigBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.saveConfigBtn.Location = new System.Drawing.Point(12, 161);
+            this.saveConfigBtn.Location = new System.Drawing.Point(12, 159);
             this.saveConfigBtn.Name = "saveConfigBtn";
             this.saveConfigBtn.Size = new System.Drawing.Size(200, 50);
             this.saveConfigBtn.TabIndex = 2;
@@ -95,7 +98,7 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button1.Location = new System.Drawing.Point(218, 161);
+            this.button1.Location = new System.Drawing.Point(218, 159);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(200, 50);
             this.button1.TabIndex = 3;
@@ -107,7 +110,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 27F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(774, 223);
+            this.ClientSize = new System.Drawing.Size(1135, 221);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.comGroup);
             this.Controls.Add(this.saveConfigBtn);
