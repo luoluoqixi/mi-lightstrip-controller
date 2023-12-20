@@ -1,13 +1,16 @@
-﻿using System;
+﻿using mi_lightstrip_controller.src.Com;
+using System;
 using System.Collections.Generic;
-using System.Management;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace mi_lightstrip_controller.src.Window
 {
     public partial class SelectComListWindow : Form
     {
-        private static string selectText;
+        private static Dictionary<string, ComObj> coms;
+        private static ComObj select;
+        private static bool isConfirm;
         public SelectComListWindow()
         {
             InitializeComponent();
@@ -15,39 +18,20 @@ namespace mi_lightstrip_controller.src.Window
         }
         private void RefreshComList()
         {
-            var comList = GetComList();
+            coms = ComUtility.GetComs();
+            var comList = coms.Keys.ToList();
             comList.Sort((a, b) => string.Compare(b, a));
+            comListDropdown.Items.Clear();
             comListDropdown.Items.AddRange(comList.ToArray());
-            selectText = comList != null && comList.Count > 0 ? comList[0] : "";
-            comListDropdown.Text = selectText;
+            comListDropdown.Text = comList != null && comList.Count > 0 ? comList[0] : "";
         }
-        public static List<string> GetComList()
+        public static ComObj GetSelectCom()
         {
-            var comlist = new List<string>();
-            try
-            {
-                using (var searcher = new ManagementObjectSearcher("select * from Win32_PnPEntity"))
-                {
-                    var hardInfos = searcher.Get();
-                    foreach (var hardInfo in hardInfos)
-                    {
-                        if (hardInfo.Properties["Name"].Value != null && hardInfo.Properties["Name"].Value.ToString().Contains("(COM"))
-                        {
-                            var strComName = hardInfo.Properties["Name"].Value.ToString();
-                            comlist.Add(strComName);
-                        }
-                    }
-                }
-            }
-            catch { }
-            return comlist;
-        }
-        public static string GetSelectCom()
-        {
-            selectText = "";
+            select = null;
+            isConfirm = false;
             var w = new SelectComListWindow();
             w.ShowDialog();
-            return selectText;
+            return isConfirm ? select : null;
         }
         private void ComListDropdown_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -59,12 +43,13 @@ namespace mi_lightstrip_controller.src.Window
         }
         private void Confirm_Click(object sender, EventArgs e)
         {
-            selectText = comListDropdown.Text;
+            string key = comListDropdown.Text;
+            select = (!string.IsNullOrEmpty(key) && coms != null && coms.ContainsKey(key)) ? coms[key] : null;
+            isConfirm = true;
             Close();
         }
         private void Cancel_Click(object sender, EventArgs e)
         {
-            selectText = null;
             Close();
         }
     }

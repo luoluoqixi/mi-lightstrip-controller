@@ -31,7 +31,9 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.comGroup = new System.Windows.Forms.GroupBox();
-            this.toggleLightStrip = new System.Windows.Forms.CheckBox();
+            this.closeBtn = new System.Windows.Forms.RadioButton();
+            this.openBtn = new System.Windows.Forms.RadioButton();
+            this.label1 = new System.Windows.Forms.Label();
             this.manualSelectBtn = new System.Windows.Forms.Button();
             this.currentComText = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -57,7 +59,9 @@
             this.comGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.comGroup.Controls.Add(this.toggleLightStrip);
+            this.comGroup.Controls.Add(this.closeBtn);
+            this.comGroup.Controls.Add(this.openBtn);
+            this.comGroup.Controls.Add(this.label1);
             this.comGroup.Controls.Add(this.manualSelectBtn);
             this.comGroup.Controls.Add(this.currentComText);
             this.comGroup.Controls.Add(this.label2);
@@ -69,16 +73,36 @@
             this.comGroup.TabStop = false;
             this.comGroup.Text = "灯带控制";
             // 
-            // toggleLightStrip
+            // closeBtn
             // 
-            this.toggleLightStrip.AutoSize = true;
-            this.toggleLightStrip.Location = new System.Drawing.Point(34, 94);
-            this.toggleLightStrip.Name = "toggleLightStrip";
-            this.toggleLightStrip.Size = new System.Drawing.Size(152, 31);
-            this.toggleLightStrip.TabIndex = 1;
-            this.toggleLightStrip.Text = "开关灯带";
-            this.toggleLightStrip.UseVisualStyleBackColor = true;
-            this.toggleLightStrip.CheckedChanged += new System.EventHandler(this.ToggleLightStrip_CheckedChanged);
+            this.closeBtn.AutoSize = true;
+            this.closeBtn.Location = new System.Drawing.Point(192, 138);
+            this.closeBtn.Name = "closeBtn";
+            this.closeBtn.Size = new System.Drawing.Size(97, 31);
+            this.closeBtn.TabIndex = 9;
+            this.closeBtn.Text = "关灯";
+            this.closeBtn.UseVisualStyleBackColor = true;
+            this.closeBtn.CheckedChanged += new System.EventHandler(this.CloseBtn_CheckedChanged);
+            // 
+            // openBtn
+            // 
+            this.openBtn.AutoSize = true;
+            this.openBtn.Location = new System.Drawing.Point(34, 138);
+            this.openBtn.Name = "openBtn";
+            this.openBtn.Size = new System.Drawing.Size(97, 31);
+            this.openBtn.TabIndex = 8;
+            this.openBtn.Text = "开灯";
+            this.openBtn.UseVisualStyleBackColor = true;
+            this.openBtn.CheckedChanged += new System.EventHandler(this.OpenBtn_CheckedChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(29, 89);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(147, 27);
+            this.label1.TabIndex = 7;
+            this.label1.Text = "工作状态：";
             // 
             // manualSelectBtn
             // 
@@ -263,7 +287,6 @@
         private System.Windows.Forms.CheckBox isAutoStarup;
         private System.Windows.Forms.CheckBox autoOpenLightStrip;
         private System.Windows.Forms.CheckBox autoCloseLightStrip;
-        private System.Windows.Forms.CheckBox toggleLightStrip;
         private System.Windows.Forms.CheckBox closeHideWindow;
         private System.Windows.Forms.NotifyIcon mainNotifyIcon;
         private System.Windows.Forms.ContextMenuStrip mainContextMenuStrip;
@@ -271,6 +294,9 @@
         private System.Windows.Forms.ToolStripMenuItem 关闭灯带ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 退出程序ToolStripMenuItem;
         private System.Windows.Forms.CheckBox autoMinimize;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.RadioButton closeBtn;
+        private System.Windows.Forms.RadioButton openBtn;
     }
 }
 
