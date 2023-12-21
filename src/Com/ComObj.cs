@@ -1,6 +1,7 @@
 ﻿using System.IO.Ports;
 using System;
-using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace mi_lightstrip_controller.src.Com
 {
@@ -10,44 +11,49 @@ namespace mi_lightstrip_controller.src.Com
         public int DataBits { get; set; } = 8;
         public StopBits StopBits { get; set; } = StopBits.One;
         public Parity Parity { get; set; } = Parity.None;
+        public int RetryMilliseconds { get; set; } = 1000;
 
         public string name;
         public string description;
 
-        private SerialPort serialPort;
+        private CancellationTokenSource cts;
+        private Action<string> successAction;
+        private Action<string, int> errorAction;
+        private readonly static object lockObj = new object();
 
-        ~ComObj()
+        public string GetShowText()
         {
-            IsOpen = false;
+            return $"{description} ({name})";
         }
-
-        public bool IsOpen
+        public void SendCom(string command, Action<string> successAction, Action<string, int> errorAction)
         {
-            get { return serialPort != null ? serialPort.IsOpen : false; }
-            set 
+            if (cts != null)
             {
-                if (!value)
+                cts.Cancel();
+                cts = null;
+            }
+            this.successAction = successAction;
+            this.errorAction = errorAction;
+            cts = new CancellationTokenSource();
+            Task.Run(() => SendComTask(command, cts), cts.Token);
+        }
+        private void SendComTask(string command, CancellationTokenSource cts)
+        {
+            int errorCount = 0;
+            while (true)
+            {
+                if (cts.IsCancellationRequested)
+                    break;
+                try
                 {
-                    if (serialPort != null && serialPort.IsOpen)
+                    using (var serialPort = new SerialPort())
                     {
-                        serialPort.Close();
-                    }
-                    serialPort = null;
-                }
-                else
-                {
-                    if (serialPort == null)
-                    {
-                        serialPort = new SerialPort();
                         serialPort.PortName = name;        // 串口名称
                         serialPort.BaudRate = BaudRate;   // 波特率
                         serialPort.DataBits = DataBits;   // 数据位
                         serialPort.StopBits = StopBits;   // 停止位
                         serialPort.Parity = Parity;       // 校验位
                         serialPort.NewLine = "\r\n";
-                    }
-                    if (!serialPort.IsOpen)
-                    {
                         try
                         {
                             serialPort.Open();
@@ -56,26 +62,28 @@ namespace mi_lightstrip_controller.src.Com
                         {
                             throw new UnauthorizedAccessException("串口被占用: " + name);
                         }
+                        serialPort.WriteLine(command);
+                        Thread.Sleep(300);
+                        string response = serialPort.ReadExisting();
+                        if (string.IsNullOrEmpty(response))
+                        {
+                            throw new Exception("串口未响应");
+                        }
+                        if (successAction != null)
+                            successAction(response);
+                        break;
                     }
                 }
-            }
-        }
-        public string GetShowText()
-        {
-            return $"{description} ({name})";
-        }
-        public string SendCom(string command)
-        {
-            try
-            {
-                if (!IsOpen)
-                    IsOpen = true;
-                serialPort.WriteLine(command);
-                return null;
-            }
-            catch (Exception e)
-            {
-                return e.Message;
+                catch (Exception e)
+                {
+                    errorCount++;
+                    lock (lockObj)
+                    {
+                        if (errorAction != null)
+                            errorAction(e.Message, errorCount);
+                    }
+                }
+                Thread.Sleep(RetryMilliseconds);
             }
         }
     }
