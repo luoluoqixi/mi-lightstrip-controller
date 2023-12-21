@@ -86,5 +86,13 @@ namespace mi_lightstrip_controller.src.Com
                 Thread.Sleep(RetryMilliseconds);
             }
         }
+        public void Dispose()
+        {
+            if (cts != null)
+            {
+                cts.Cancel();
+                cts = null;
+            }
+        }
     }
 }
