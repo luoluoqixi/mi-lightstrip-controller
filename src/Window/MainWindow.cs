@@ -62,6 +62,7 @@ namespace mi_lightstrip_controller
             Setting.Instance.Com = com.name;
             currentComText.Text = com.GetShowText();
             connect.SetCom(com);
+            connect.SetCallback(OpenLightStripSuccess, OpenLightStripError);
         }
         private ComObj AutoSelectCom()
         {
@@ -87,6 +88,7 @@ namespace mi_lightstrip_controller
             if (connect.State != openBtn.Checked)
             {
                 connect.OpenLightStrip(openBtn.Checked);
+                UpdateState();
             }
         }
         private void CloseBtn_CheckedChanged(object sender, EventArgs e)
@@ -198,10 +200,6 @@ namespace mi_lightstrip_controller
                 if (connect != null)
                     connect.OpenLightStrip(false, false);
             }
-            if (connect != null)
-            {
-                connect.Close();
-            }
         }
         protected override void WndProc(ref Message m)
         {
@@ -210,6 +208,38 @@ namespace mi_lightstrip_controller
                 AutoClose();
             }
             base.WndProc(ref m);
+        }
+        private void OpenLightStripError(string error, int reNumber)
+        {
+            if (InvokeRequired)
+            {
+                // 如果不在UI线程上，通过委托在UI线程上执行
+                try
+                {
+                    Invoke(new Action(() => OpenLightStripError(error, reNumber)));
+                }
+                catch { }
+            }
+            else
+            {
+                logText.Text = error + ", 重试: " + reNumber;
+            }
+        }
+        private void OpenLightStripSuccess(bool isOpen, string response)
+        {
+            if (InvokeRequired)
+            {
+                // 如果不在UI线程上，通过委托在UI线程上执行
+                try
+                {
+                    Invoke(new Action(() => OpenLightStripSuccess(isOpen, response)));
+                }
+                catch { }
+            }
+            else
+            {
+                logText.Text = (isOpen ? "开启成功: " : "关闭成功: ") + response;
+            }
         }
     }
 }

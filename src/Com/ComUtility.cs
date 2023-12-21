@@ -64,6 +64,10 @@ namespace mi_lightstrip_controller.src.Com
                     {
                         if (hardInfo.Properties["Name"].Value != null && hardInfo.Properties["Name"].Value.ToString().Contains("(COM"))
                         {
+                            foreach (var item in hardInfo.Properties)
+                            {
+                                Console.WriteLine(item.Name + " " + item.Value);
+                            }
                             var strComName = hardInfo.Properties["Name"].Value.ToString();
                             var description = hardInfo.Properties["Description"].Value != null? hardInfo.Properties["Description"].Value.ToString() : "";
 

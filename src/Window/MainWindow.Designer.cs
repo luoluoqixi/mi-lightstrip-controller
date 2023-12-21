@@ -49,6 +49,8 @@
             this.开启灯带ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关闭灯带ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.退出程序ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label3 = new System.Windows.Forms.Label();
+            this.logText = new System.Windows.Forms.TextBox();
             this.comGroup.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.mainContextMenuStrip.SuspendLayout();
@@ -59,6 +61,8 @@
             this.comGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.comGroup.Controls.Add(this.logText);
+            this.comGroup.Controls.Add(this.label3);
             this.comGroup.Controls.Add(this.closeBtn);
             this.comGroup.Controls.Add(this.openBtn);
             this.comGroup.Controls.Add(this.label1);
@@ -255,6 +259,27 @@
             this.退出程序ToolStripMenuItem.Text = "退出程序";
             this.退出程序ToolStripMenuItem.Click += new System.EventHandler(this.QuitProgramToolStripMenuItem_Click);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(29, 206);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(93, 27);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "日志：";
+            // 
+            // logText
+            // 
+            this.logText.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.logText.Location = new System.Drawing.Point(115, 206);
+            this.logText.Multiline = true;
+            this.logText.Name = "logText";
+            this.logText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.logText.Size = new System.Drawing.Size(1009, 213);
+            this.logText.TabIndex = 11;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 27F);
@@ -297,6 +322,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.RadioButton closeBtn;
         private System.Windows.Forms.RadioButton openBtn;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox logText;
     }
 }
 
