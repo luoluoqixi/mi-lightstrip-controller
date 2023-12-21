@@ -24,6 +24,10 @@ namespace mi_lightstrip_controller.src.Lightstrip
         }
         public void SetCom(ComObj com)
         {
+            if (this.com != null)
+            {
+                this.com.Dispose();
+            }
             this.com = com;
             this.com.BaudRate = baudRate;
             this.com.DataBits = dataBits;
