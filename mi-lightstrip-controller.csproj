@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="src\Com\ComObj.cs" />
     <Compile Include="src\Com\ComUtility.cs" />
+    <Compile Include="src\Lightstrip\LightstripMode.cs" />
     <Compile Include="src\Setting\Setting.cs" />
     <Compile Include="src\Utility\IniUtility.cs" />
     <Compile Include="src\Lightstrip\LightstripConnect.cs" />
