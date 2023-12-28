@@ -3,6 +3,8 @@ using mi_lightstrip_controller.src.Lightstrip;
 using mi_lightstrip_controller.src.Setting;
 using mi_lightstrip_controller.src.Window;
 using System;
+using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace mi_lightstrip_controller
@@ -18,9 +20,26 @@ namespace mi_lightstrip_controller
             Shown += MainWindow_FormShown;
             Init();
         }
-        private void Init()
+        async private void Init()
         {
+            switch (Setting.Instance.Mode)
+            {
+                case LightstripMode.Normal:
+                    normalModeToggle.Checked = true;
+                    break;
+                case LightstripMode.PureColor:
+                    pureModeToggle.Checked = true;
+                    break;
+                default:
+                    normalModeToggle.Checked = true;
+                    break;
+            }
+            selectColorBtn.BackColor = Setting.Instance.PureColor;
             connect = new LightstripConnect();
+            connect.SetMode(Setting.Instance.Mode);
+            connect.SetPureColor(Setting.Instance.PureColor);
+            connect.SetIntensity(Setting.Instance.Intensity);
+
             isAutoStarup.Checked = Setting.Instance.AutoStartup;
             autoOpenLightStrip.Checked = Setting.Instance.AutoOpenLightStrip;
             autoCloseLightStrip.Checked = Setting.Instance.AutoCloseLightStrip;
@@ -39,11 +58,11 @@ namespace mi_lightstrip_controller
                 var com = ComUtility.FindCom(Setting.Instance.Com);
                 if (com != null)
                 {
-                    SetCom(com);
+                    await SetCom(com);
+                    UpdateState();
                     if (Setting.Instance.AutoOpenLightStrip)
                     {
-                        connect.OpenLightStrip(true);
-                        UpdateState();
+                        await SetState(true);
                     }
                 }
                 else
@@ -57,12 +76,12 @@ namespace mi_lightstrip_controller
                 Opacity = 0;
             }
         }
-        private void SetCom(ComObj com)
+        private async Task SetCom(ComObj com)
         {
             Setting.Instance.Com = com.name;
             currentComText.Text = com.GetShowText();
-            connect.SetCom(com);
-            connect.SetCallback(OpenLightStripSuccess, OpenLightStripError);
+            connect.SetCallback(ExecuteCommandSuccess, ExecuteCommandError);
+            await connect.InitCom(com);
         }
         private ComObj AutoSelectCom()
         {
@@ -71,7 +90,7 @@ namespace mi_lightstrip_controller
             {
                 if (com.Key.ToLower().Contains("ch340"))
                 {
-                    SetCom(com.Value);
+                    _ = SetCom(com.Value);
                     return com.Value;
                 }
             }
@@ -83,12 +102,46 @@ namespace mi_lightstrip_controller
             openBtn.Checked = connect.State;
             closeBtn.Checked = !connect.State;
         }
-        private void OpenBtn_CheckedChanged(object sender, EventArgs e)
+        private async void SetMode(LightstripMode mode)
+        {
+            if (Setting.Instance.Mode != mode)
+                Setting.Instance.Mode = mode;
+            if (connect != null)
+            {
+                connect.SetMode(mode);
+                await connect.UpdateMode();
+                if (mode == LightstripMode.PureColor)
+                {
+                    await UpdateRGBA();
+                }
+            }
+        }
+        private async Task UpdateRGBA()
+        {
+            var intensity = Setting.Instance.Intensity;
+            var pureColor = Setting.Instance.PureColor;
+            connect.SetIntensity(intensity);
+            connect.SetPureColor(pureColor);
+            await SetRGBA(intensity, pureColor);
+        }
+        private async Task SetRGBA(int intensity, Color c)
+        {
+            if (Setting.Instance.Intensity != intensity)
+                Setting.Instance.Intensity = intensity;
+            if (Setting.Instance.PureColor != c)
+                Setting.Instance.PureColor = c;
+            await connect.SetRGBPC(intensity / 100f, c);
+        }
+        private async Task SetState(bool state)
+        {
+            await connect.OpenLightStrip(state);
+            UpdateState();
+        }
+        private async void OpenBtn_CheckedChanged(object sender, EventArgs e)
         {
             if (connect.State != openBtn.Checked)
             {
-                connect.OpenLightStrip(openBtn.Checked);
-                UpdateState();
+                await SetState(openBtn.Checked);
             }
         }
         private void CloseBtn_CheckedChanged(object sender, EventArgs e)
@@ -102,15 +155,13 @@ namespace mi_lightstrip_controller
             Dispose();
             Application.Exit();
         }
-        private void CloseLightStripToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void CloseLightStripToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            connect.OpenLightStrip(false);
-            UpdateState();
+            await SetState(false);
         }
-        private void OpenLightStripToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void OpenLightStripToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            connect.OpenLightStrip(true);
-            UpdateState();
+            await SetState(true);
         }
         private void IsAutoStarup_CheckedChanged(object sender, EventArgs e)
         {
@@ -177,12 +228,12 @@ namespace mi_lightstrip_controller
                 Visible = true;
             }
         }
-        private void ManualSelectBtn_Click(object sender, EventArgs e)
+        private async void ManualSelectBtn_Click(object sender, EventArgs e)
         {
             var com = SelectComListWindow.GetSelectCom();
             if (com != null)
             {
-                SetCom(com);
+                await SetCom(com);
             }
         }
         private void AutoSelectBtn_Click(object sender, EventArgs e)
@@ -193,12 +244,11 @@ namespace mi_lightstrip_controller
                 MessageBox.Show("找到串口: " + com.GetShowText(), "提示", MessageBoxButtons.OK);
             }
         }
-        private void AutoClose()
+        private async void AutoClose()
         {
             if (Setting.Instance.AutoCloseLightStrip)
             {
-                if (connect != null)
-                    connect.OpenLightStrip(false, false);
+                await connect?.OpenLightStrip(false, false);
             }
         }
         protected override void WndProc(ref Message m)
@@ -209,14 +259,14 @@ namespace mi_lightstrip_controller
             }
             base.WndProc(ref m);
         }
-        private void OpenLightStripError(string error, int reNumber)
+        private void ExecuteCommandError(string error, int reNumber)
         {
             if (InvokeRequired)
             {
                 // 如果不在UI线程上，通过委托在UI线程上执行
                 try
                 {
-                    Invoke(new Action(() => OpenLightStripError(error, reNumber)));
+                    Invoke(new Action(() => ExecuteCommandError(error, reNumber)));
                 }
                 catch { }
             }
@@ -225,20 +275,51 @@ namespace mi_lightstrip_controller
                 logText.Text = error + ", 重试: " + reNumber;
             }
         }
-        private void OpenLightStripSuccess(bool isOpen, string response)
+        private void ExecuteCommandSuccess(string text, string response)
         {
             if (InvokeRequired)
             {
                 // 如果不在UI线程上，通过委托在UI线程上执行
                 try
                 {
-                    Invoke(new Action(() => OpenLightStripSuccess(isOpen, response)));
+                    Invoke(new Action(() => ExecuteCommandSuccess(text, response)));
                 }
                 catch { }
             }
             else
             {
-                logText.Text = (isOpen ? "开启成功: " : "关闭成功: ") + response;
+                logText.Text = text + "\r\n" + response;
+            }
+        }
+        private void NormalModeToggle_CheckedChanged(object sender, EventArgs e)
+        {
+            normalPanel.Visible = normalModeToggle.Checked;
+            if (normalModeToggle.Checked)
+                SetMode(LightstripMode.Normal);
+        }
+        private void PureModeToggle_CheckedChanged(object sender, EventArgs e)
+        {
+            purePanel.Visible = pureModeToggle.Checked;
+            if (pureModeToggle.Checked)
+                SetMode(LightstripMode.PureColor);
+        }
+        private async void IntensityTrackBar_Scroll(object sender, EventArgs e)
+        {
+            int v = intensityTrackBar.Value;
+            Setting.Instance.Intensity = v;
+            await UpdateRGBA();
+        }
+        private async void SelectColorBtn_Click(object sender, EventArgs e)
+        {
+            var colorDialog = new ColorDialog();
+            colorDialog.Color = Setting.Instance.PureColor;
+            colorDialog.AllowFullOpen = true;
+            var r = colorDialog.ShowDialog();
+            if (r == DialogResult.OK)
+            {
+                Setting.Instance.PureColor = colorDialog.Color;
+                selectColorBtn.BackColor = Setting.Instance.PureColor;
+                await UpdateRGBA();
             }
         }
     }

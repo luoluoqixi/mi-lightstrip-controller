@@ -7,6 +7,17 @@ namespace mi_lightstrip_controller.src.Com
 {
     public class ComObj
     {
+        public class SendReponse
+        {
+            public string res;
+            public string error;
+            public int errCount;
+
+            public bool IsError
+            {
+                get { return errCount > 0; }
+            }
+        }
         public int BaudRate { get; set; } = 230400;
         public int DataBits { get; set; } = 8;
         public StopBits StopBits { get; set; } = StopBits.One;
@@ -17,27 +28,35 @@ namespace mi_lightstrip_controller.src.Com
         public string description;
 
         private CancellationTokenSource cts;
-        private Action<string> successAction;
-        private Action<string, int> errorAction;
         private readonly static object lockObj = new object();
 
         public string GetShowText()
         {
             return $"{description} ({name})";
         }
-        public void SendCom(string command, Action<string> successAction, Action<string, int> errorAction)
+        async public Task<SendReponse> SendCom(string command, bool hasResponse, Action<string, int> errorAction)
         {
             if (cts != null)
             {
                 cts.Cancel();
                 cts = null;
             }
-            this.successAction = successAction;
-            this.errorAction = errorAction;
             cts = new CancellationTokenSource();
-            Task.Run(() => SendComTask(command, cts), cts.Token);
+            var response = new SendReponse();
+            Action<string> success = (res) =>
+            {
+                response.res = res;
+            };
+            Action<string, int> error = (err, errCount) =>
+            {
+                response.error = err;
+                response.errCount = errCount;
+                errorAction?.Invoke(err, errCount);
+            };
+            await Task.Run(() => SendComTask(command, cts, hasResponse, success, error), cts.Token);
+            return response;
         }
-        private void SendComTask(string command, CancellationTokenSource cts)
+        private void SendComTask(string command, CancellationTokenSource cts, bool hasResponse, Action<string> successAction, Action<string, int> errorAction)
         {
             int errorCount = 0;
             while (true)
@@ -65,12 +84,11 @@ namespace mi_lightstrip_controller.src.Com
                         serialPort.WriteLine(command);
                         Thread.Sleep(300);
                         string response = serialPort.ReadExisting();
-                        if (string.IsNullOrEmpty(response))
+                        if (hasResponse && string.IsNullOrEmpty(response))
                         {
                             throw new Exception("串口未响应");
                         }
-                        if (successAction != null)
-                            successAction(response);
+                        successAction?.Invoke(response);
                         break;
                     }
                 }
@@ -79,8 +97,7 @@ namespace mi_lightstrip_controller.src.Com
                     errorCount++;
                     lock (lockObj)
                     {
-                        if (errorAction != null)
-                            errorAction(e.Message, errorCount);
+                        errorAction?.Invoke(e.Message, errorCount);
                     }
                 }
                 Thread.Sleep(RetryMilliseconds);

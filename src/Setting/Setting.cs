@@ -1,6 +1,8 @@
-﻿using mi_lightstrip_controller.src.Utility;
+﻿using mi_lightstrip_controller.src.Lightstrip;
+using mi_lightstrip_controller.src.Utility;
 using Microsoft.Win32;
 using System;
+using System.Drawing;
 using System.IO;
 using System.Security.AccessControl;
 using System.Windows.Forms;
@@ -81,7 +83,51 @@ namespace mi_lightstrip_controller.src.Setting
             get { return GetValue("Com", ""); }
             set { SetValue("Com", value); }
         }
+        public LightstripMode Mode
+        {
+            get { return (LightstripMode)GetValue("Mode", 0); }
+            set { SetValue("Mode", (int)value); }
+        }
+        public int Intensity
+        {
+            get { return GetValue("Intensity", 100); }
+            set { SetValue("Intensity", value); }
+        }
+        public Color PureColor
+        {
+            get { return GetValue("PureColor", Color.White); }
+            set { SetValue("PureColor", value); }
+        }
 
+        private static Color GetValue(string key, Color defaultValue)
+        {
+            string value = IniUtility.Read(settingKey, key, "", SavePath);
+            var c = defaultValue;
+            if (!string.IsNullOrEmpty(value))
+            {
+                string[] rgba = value.Split(' ');
+                if (rgba.Length >= 4)
+                {
+                    bool isParseSuccess = true;
+                    if (!int.TryParse(rgba[0].Trim(), out int r))
+                        isParseSuccess = false;
+                    if (!int.TryParse(rgba[1].Trim(), out int g))
+                        isParseSuccess = false;
+                    if (!int.TryParse(rgba[2].Trim(), out int b))
+                        isParseSuccess = false;
+                    if (!int.TryParse(rgba[3].Trim(), out int a))
+                        isParseSuccess = false;
+                    if (isParseSuccess)
+                        c = Color.FromArgb(a, r, g, b);
+                }
+            }
+            return c;
+        }
+        private static void SetValue(string key, Color value)
+        {
+            string color = $"{value.R} {value.G} {value.B} {value.A}";
+            IniUtility.Write(settingKey, key, color, SavePath);
+        }
         private static int GetValue(string key, int defaultValue = 0)
         {
             string value = IniUtility.Read(settingKey, key, defaultValue.ToString(), SavePath);
@@ -99,7 +145,7 @@ namespace mi_lightstrip_controller.src.Setting
         }
         private static void SetValue(string key, object value)
         {
-            IniUtility.Write(settingKey, key, value.ToString(), SavePath);
+            IniUtility.Write(settingKey, key, value == null ? "" : value.ToString(), SavePath);
         }
 
         private static Setting instance;
