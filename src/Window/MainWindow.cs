@@ -70,11 +70,6 @@ namespace mi_lightstrip_controller
                     MessageBox.Show("保存的串口未找到: " + Setting.Instance.Com, "错误", MessageBoxButtons.OK);
                 }
             }
-            if (Setting.Instance.AutoMinimize)
-            {
-                ShowInTaskbar = false;
-                Opacity = 0;
-            }
         }
         private async Task SetCom(ComObj com)
         {
@@ -213,8 +208,6 @@ namespace mi_lightstrip_controller
             if (Setting.Instance.AutoMinimize)
             {
                 Hide();
-                ShowInTaskbar = true;
-                Opacity = 1;
             }
         }
         private void MainNotifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)

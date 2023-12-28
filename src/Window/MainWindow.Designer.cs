@@ -90,7 +90,7 @@
             this.comGroup.Controls.Add(this.normalPanel);
             this.comGroup.Location = new System.Drawing.Point(13, 13);
             this.comGroup.Name = "comGroup";
-            this.comGroup.Size = new System.Drawing.Size(1190, 664);
+            this.comGroup.Size = new System.Drawing.Size(1190, 612);
             this.comGroup.TabIndex = 99;
             this.comGroup.TabStop = false;
             this.comGroup.Text = "灯带控制";
@@ -183,7 +183,7 @@
             // 
             this.logText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.logText.Location = new System.Drawing.Point(115, 490);
+            this.logText.Location = new System.Drawing.Point(115, 438);
             this.logText.Multiline = true;
             this.logText.Name = "logText";
             this.logText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -194,7 +194,7 @@
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(29, 490);
+            this.label3.Location = new System.Drawing.Point(29, 438);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(93, 27);
             this.label3.TabIndex = 10;
@@ -251,7 +251,7 @@
             this.purePanel.Controls.Add(this.intensityTrackBar);
             this.purePanel.Location = new System.Drawing.Point(34, 201);
             this.purePanel.Name = "purePanel";
-            this.purePanel.Size = new System.Drawing.Size(1132, 283);
+            this.purePanel.Size = new System.Drawing.Size(1132, 231);
             this.purePanel.TabIndex = 15;
             this.purePanel.TabStop = false;
             this.purePanel.Text = "纯色设置";
@@ -270,7 +270,7 @@
             // 
             this.selectColorBtn.Location = new System.Drawing.Point(108, 116);
             this.selectColorBtn.Name = "selectColorBtn";
-            this.selectColorBtn.Size = new System.Drawing.Size(459, 135);
+            this.selectColorBtn.Size = new System.Drawing.Size(459, 85);
             this.selectColorBtn.TabIndex = 0;
             this.selectColorBtn.UseVisualStyleBackColor = true;
             this.selectColorBtn.Click += new System.EventHandler(this.SelectColorBtn_Click);
@@ -305,7 +305,7 @@
             this.normalPanel.Controls.Add(this.label5);
             this.normalPanel.Location = new System.Drawing.Point(34, 201);
             this.normalPanel.Name = "normalPanel";
-            this.normalPanel.Size = new System.Drawing.Size(1132, 283);
+            this.normalPanel.Size = new System.Drawing.Size(1132, 231);
             this.normalPanel.TabIndex = 14;
             this.normalPanel.TabStop = false;
             this.normalPanel.Text = "幻彩设置";
@@ -322,22 +322,23 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.autoMinimize);
             this.groupBox1.Controls.Add(this.closeHideWindow);
             this.groupBox1.Controls.Add(this.autoCloseLightStrip);
             this.groupBox1.Controls.Add(this.autoOpenLightStrip);
             this.groupBox1.Controls.Add(this.isAutoStarup);
-            this.groupBox1.Location = new System.Drawing.Point(13, 683);
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupBox1.Location = new System.Drawing.Point(0, 690);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1190, 314);
+            this.groupBox1.Size = new System.Drawing.Size(1214, 319);
             this.groupBox1.TabIndex = 98;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "设置";
             // 
             // autoMinimize
             // 
+            this.autoMinimize.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.autoMinimize.AutoSize = true;
             this.autoMinimize.Location = new System.Drawing.Point(34, 258);
             this.autoMinimize.Name = "autoMinimize";
@@ -349,6 +350,8 @@
             // 
             // closeHideWindow
             // 
+            this.closeHideWindow.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.closeHideWindow.AutoSize = true;
             this.closeHideWindow.Location = new System.Drawing.Point(34, 209);
             this.closeHideWindow.Name = "closeHideWindow";
@@ -360,6 +363,8 @@
             // 
             // autoCloseLightStrip
             // 
+            this.autoCloseLightStrip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.autoCloseLightStrip.AutoSize = true;
             this.autoCloseLightStrip.Location = new System.Drawing.Point(34, 156);
             this.autoCloseLightStrip.Name = "autoCloseLightStrip";
@@ -371,6 +376,8 @@
             // 
             // autoOpenLightStrip
             // 
+            this.autoOpenLightStrip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.autoOpenLightStrip.AutoSize = true;
             this.autoOpenLightStrip.Location = new System.Drawing.Point(34, 102);
             this.autoOpenLightStrip.Name = "autoOpenLightStrip";
@@ -382,6 +389,8 @@
             // 
             // isAutoStarup
             // 
+            this.isAutoStarup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.isAutoStarup.AutoSize = true;
             this.isAutoStarup.Location = new System.Drawing.Point(34, 52);
             this.isAutoStarup.Name = "isAutoStarup";
