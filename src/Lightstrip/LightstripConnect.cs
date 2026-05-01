@@ -16,6 +16,7 @@ namespace mi_lightstrip_controller.src.Lightstrip
         private const int dataBits = 8;
         private const StopBits stopBits = StopBits.One;
         private const Parity parity = Parity.None;
+        private const int powerOnSettleMilliseconds = 200;
 
         private Action<string, int> errorAction;
         private Action<string, string> successAction;
@@ -47,15 +48,17 @@ namespace mi_lightstrip_controller.src.Lightstrip
         {
             string toState = isOpen ? "开启" : "关闭";
             var res = await SendCommand("set_power " + (isOpen ? "1" : "0"), isShowError ? (toState + "灯带失败") : null);
-            if (isOpen)
-            {
-                await UpdateMode();
-                await UpdateRGBA();
-            }
+            if (res == null) return false;
             if (!res.IsError)
             {
-                successAction?.Invoke(toState + "灯带成功", res.res);
                 State = isOpen;
+                if (isOpen)
+                {
+                    // 设备刚上电时立即切模式，偶发不会立刻生效；稍等后重放当前模式/颜色更稳定。
+                    await Task.Delay(powerOnSettleMilliseconds);
+                    await ApplyCurrentMode();
+                }
+                successAction?.Invoke(toState + "灯带成功", res.res);
                 return true;
             }
             return false;
@@ -68,10 +71,17 @@ namespace mi_lightstrip_controller.src.Lightstrip
         async public Task UpdateState()
         {
             var res = await SendCommand("get_power");
-            if (!res.IsError)
+            if (res != null && !res.IsError)
             {
-                State = res.res == "1";
-                successAction?.Invoke("获取灯带状态成功", res.res);
+                if (TryParseResponseInt(res.res, out int state))
+                {
+                    State = state == 1;
+                    successAction?.Invoke("获取灯带状态成功", res.res);
+                }
+                else
+                {
+                    errorAction?.Invoke("解析灯带状态失败: " + (string.IsNullOrEmpty(res.res) ? "null" : res.res), 1);
+                }
             }
         }
         async public Task SetRGBPC(float intensity, Color color)
@@ -97,7 +107,7 @@ namespace mi_lightstrip_controller.src.Lightstrip
             string colorsStr = string.Join(" ", colors.Select(color => color + " " + "4").ToArray());
             string c = $"set_rgb_pc {arg1} {arg2} {intensity16} {colorsStr}";
             var res = await SendCommand(c, null, false);
-            if (!res.IsError)
+            if (res != null && !res.IsError)
                 successAction?.Invoke(c, res.res);
         }
         public void SetMode(LightstripMode mode)
@@ -118,9 +128,11 @@ namespace mi_lightstrip_controller.src.Lightstrip
             if (Mode == LightstripMode.Normal)
             {
                 await SetPCLinkage(false);
+                await SetPCAvailable(false);
             }
             else
             {
+                await SetPCAvailable(true);
                 await SetPCLinkage(true);
             }
         }
@@ -131,14 +143,24 @@ namespace mi_lightstrip_controller.src.Lightstrip
                 await SetRGBPC(Intensity, PureColor);
             }
         }
+
+        async public Task ApplyCurrentMode()
+        {
+            await UpdateMode();
+            if (Mode == LightstripMode.PureColor)
+            {
+                await Task.Delay(powerOnSettleMilliseconds);
+                await UpdateRGBA();
+            }
+        }
         #endregion
 
         #region Private
         async private Task SetPCAvailable(bool available)
         {
-            var c = "set_pc_available " + (available ? 1 : 1);
+            var c = "set_pc_available " + (available ? "1" : "0");
             var res = await SendCommand(c);
-            if (!res.IsError)
+            if (res != null && !res.IsError)
             {
                 successAction?.Invoke(c, res.res);
             }
@@ -147,7 +169,7 @@ namespace mi_lightstrip_controller.src.Lightstrip
         {
             string c = "set_pc_linkage " + (linkage ? "1" : "0");
             var res = await SendCommand(c);
-            if (!res.IsError)
+            if (res != null && !res.IsError)
             {
                 successAction?.Invoke(c, res.res);
             }
@@ -156,23 +178,16 @@ namespace mi_lightstrip_controller.src.Lightstrip
         {
             string c = "get_length";
             var res = await SendCommand(c);
-            if (!res.IsError)
+            if (res != null && !res.IsError)
             {
-                if (!string.IsNullOrEmpty(res.res))
+                if (TryParseResponseInt(res.res, out int count))
                 {
-                    if (int.TryParse(res.res, out int count))
-                    {
-                        successAction?.Invoke("获取灯带长度", res.res);
-                        return count;
-                    }
-                    else
-                    {
-                        errorAction?.Invoke("解析灯带长度失败: " + res.res, 1);
-                    }
+                    successAction?.Invoke("获取灯带长度", res.res);
+                    return count;
                 }
                 else
                 {
-                    errorAction?.Invoke("解析灯带长度失败: null", 1);
+                    errorAction?.Invoke("解析灯带长度失败: " + (string.IsNullOrEmpty(res.res) ? "null" : res.res), 1);
                 }
             }
             return 0;
@@ -212,6 +227,28 @@ namespace mi_lightstrip_controller.src.Lightstrip
                 }
                 return new ComObj.SendReponse { errCount = 1, error = error, };
             }
+        }
+
+        private static bool TryParseResponseInt(string response, out int value)
+        {
+            value = 0;
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return false;
+            }
+
+            var parts = response
+                .Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = parts.Length - 1; i >= 0; i--)
+            {
+                if (int.TryParse(parts[i], out value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         #endregion
     }

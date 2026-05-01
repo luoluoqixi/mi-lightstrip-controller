@@ -12,6 +12,7 @@ namespace mi_lightstrip_controller
     public partial class MainWindow : Form
     {
         public LightstripConnect connect;
+        private bool isSyncingPowerState;
 
         public MainWindow()
         {
@@ -51,7 +52,7 @@ namespace mi_lightstrip_controller
 
             if (string.IsNullOrEmpty(Setting.Instance.Com))
             {
-                AutoSelectCom();
+                await AutoSelectCom();
             }
             else
             {
@@ -59,7 +60,6 @@ namespace mi_lightstrip_controller
                 if (com != null)
                 {
                     await SetCom(com);
-                    UpdateState();
                     if (Setting.Instance.AutoOpenLightStrip)
                     {
                         await SetState(true);
@@ -77,15 +77,16 @@ namespace mi_lightstrip_controller
             currentComText.Text = com.GetShowText();
             connect.SetCallback(ExecuteCommandSuccess, ExecuteCommandError);
             await connect.InitCom(com);
+            UpdateState();
         }
-        private ComObj AutoSelectCom()
+        private async Task<ComObj> AutoSelectCom()
         {
             var coms = ComUtility.GetComs();
             foreach (var com in coms)
             {
                 if (com.Key.ToLower().Contains("ch340"))
                 {
-                    _ = SetCom(com.Value);
+                    await SetCom(com.Value);
                     return com.Value;
                 }
             }
@@ -94,8 +95,11 @@ namespace mi_lightstrip_controller
         }
         private void UpdateState()
         {
+            if (connect == null) return;
+            isSyncingPowerState = true;
             openBtn.Checked = connect.State;
             closeBtn.Checked = !connect.State;
+            isSyncingPowerState = false;
         }
         private async void SetMode(LightstripMode mode)
         {
@@ -129,19 +133,33 @@ namespace mi_lightstrip_controller
         }
         private async Task SetState(bool state)
         {
-            await connect.OpenLightStrip(state);
-            UpdateState();
+            if (connect == null) return;
+            if (await connect.OpenLightStrip(state))
+            {
+                UpdateState();
+            }
         }
         private async void OpenBtn_CheckedChanged(object sender, EventArgs e)
         {
-            if (connect.State != openBtn.Checked)
+            if (isSyncingPowerState || !openBtn.Checked || connect == null)
             {
-                await SetState(openBtn.Checked);
+                return;
+            }
+            if (!connect.State)
+            {
+                await SetState(true);
             }
         }
-        private void CloseBtn_CheckedChanged(object sender, EventArgs e)
+        private async void CloseBtn_CheckedChanged(object sender, EventArgs e)
         {
-            // 状态改变时open与close都会自动执行，只需要写在一个监听中即可
+            if (isSyncingPowerState || !closeBtn.Checked || connect == null)
+            {
+                return;
+            }
+            if (connect.State)
+            {
+                await SetState(false);
+            }
         }
         private void QuitProgramToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -229,9 +247,9 @@ namespace mi_lightstrip_controller
                 await SetCom(com);
             }
         }
-        private void AutoSelectBtn_Click(object sender, EventArgs e)
+        private async void AutoSelectBtn_Click(object sender, EventArgs e)
         {
-            var com = AutoSelectCom();
+            var com = await AutoSelectCom();
             if (com != null)
             {
                 MessageBox.Show("找到串口: " + com.GetShowText(), "提示", MessageBoxButtons.OK);
