@@ -49,6 +49,7 @@ namespace mi_lightstrip_controller
             currentComText.Text = Setting.Instance.Com;
             closeBtn.Checked = true;
             openBtn.Checked = false;
+            UpdateModeToggleEnabled();
 
             if (string.IsNullOrEmpty(Setting.Instance.Com))
             {
@@ -95,11 +96,20 @@ namespace mi_lightstrip_controller
         }
         private void UpdateState()
         {
-            if (connect == null) return;
             isSyncingPowerState = true;
-            openBtn.Checked = connect.State;
-            closeBtn.Checked = !connect.State;
+            if (connect != null)
+            {
+                openBtn.Checked = connect.State;
+                closeBtn.Checked = !connect.State;
+            }
             isSyncingPowerState = false;
+            UpdateModeToggleEnabled();
+        }
+        private void UpdateModeToggleEnabled()
+        {
+            bool isPowerOn = connect != null && connect.State;
+            normalModeToggle.Enabled = isPowerOn;
+            pureModeToggle.Enabled = isPowerOn;
         }
         private async void SetMode(LightstripMode mode)
         {
