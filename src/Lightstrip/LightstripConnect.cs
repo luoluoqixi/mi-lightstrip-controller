@@ -17,6 +17,7 @@ namespace mi_lightstrip_controller.src.Lightstrip
         private const StopBits stopBits = StopBits.One;
         private const Parity parity = Parity.None;
         private const int powerOnSettleMilliseconds = 200;
+        private const int modeSwitchSettleMilliseconds = 120;
 
         private Action<string, int> errorAction;
         private Action<string, string> successAction;
@@ -128,11 +129,18 @@ namespace mi_lightstrip_controller.src.Lightstrip
             if (Mode == LightstripMode.Normal)
             {
                 await SetPCLinkage(false);
+                await Task.Delay(modeSwitchSettleMilliseconds);
                 await SetPCAvailable(false);
+                if (State)
+                {
+                    await Task.Delay(modeSwitchSettleMilliseconds);
+                    await ReassertPowerOn();
+                }
             }
             else
             {
                 await SetPCAvailable(true);
+                await Task.Delay(modeSwitchSettleMilliseconds);
                 await SetPCLinkage(true);
             }
         }
@@ -159,19 +167,28 @@ namespace mi_lightstrip_controller.src.Lightstrip
         async private Task SetPCAvailable(bool available)
         {
             var c = "set_pc_available " + (available ? "1" : "0");
-            var res = await SendCommand(c);
+            var res = await SendCommand(c, null, false);
             if (res != null && !res.IsError)
             {
-                successAction?.Invoke(c, res.res);
+                successAction?.Invoke(c, string.IsNullOrWhiteSpace(res.res) ? "(no response)" : res.res);
             }
         }
         async private Task SetPCLinkage(bool linkage)
         {
             string c = "set_pc_linkage " + (linkage ? "1" : "0");
-            var res = await SendCommand(c);
+            var res = await SendCommand(c, null, false);
             if (res != null && !res.IsError)
             {
-                successAction?.Invoke(c, res.res);
+                successAction?.Invoke(c, string.IsNullOrWhiteSpace(res.res) ? "(no response)" : res.res);
+            }
+        }
+        async private Task ReassertPowerOn()
+        {
+            string c = "set_power 1";
+            var res = await SendCommand(c, null, false);
+            if (res != null && !res.IsError)
+            {
+                successAction?.Invoke(c, string.IsNullOrWhiteSpace(res.res) ? "(no response)" : res.res);
             }
         }
         async private Task<int> GetLength()

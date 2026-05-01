@@ -4,6 +4,7 @@ using mi_lightstrip_controller.src.Setting;
 using mi_lightstrip_controller.src.Window;
 using System;
 using System.Drawing;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,6 +14,7 @@ namespace mi_lightstrip_controller
     {
         public LightstripConnect connect;
         private bool isSyncingPowerState;
+        private readonly SemaphoreSlim operationLock = new SemaphoreSlim(1, 1);
 
         public MainWindow()
         {
@@ -111,21 +113,41 @@ namespace mi_lightstrip_controller
             normalModeToggle.Enabled = isPowerOn;
             pureModeToggle.Enabled = isPowerOn;
         }
-        private async void SetMode(LightstripMode mode)
+        private async Task SetMode(LightstripMode mode)
         {
             if (Setting.Instance.Mode != mode)
                 Setting.Instance.Mode = mode;
             if (connect != null)
             {
-                connect.SetMode(mode);
-                await connect.UpdateMode();
-                if (mode == LightstripMode.PureColor)
+                await operationLock.WaitAsync();
+                try
                 {
-                    await UpdateRGBA();
+                    connect.SetMode(mode);
+                    await connect.UpdateMode();
+                    if (mode == LightstripMode.PureColor)
+                    {
+                        await UpdateRGBAInternal();
+                    }
+                }
+                finally
+                {
+                    operationLock.Release();
                 }
             }
         }
         private async Task UpdateRGBA()
+        {
+            await operationLock.WaitAsync();
+            try
+            {
+                await UpdateRGBAInternal();
+            }
+            finally
+            {
+                operationLock.Release();
+            }
+        }
+        private async Task UpdateRGBAInternal()
         {
             var intensity = Setting.Instance.Intensity;
             var pureColor = Setting.Instance.PureColor;
@@ -144,9 +166,17 @@ namespace mi_lightstrip_controller
         private async Task SetState(bool state)
         {
             if (connect == null) return;
-            if (await connect.OpenLightStrip(state))
+            await operationLock.WaitAsync();
+            try
             {
-                UpdateState();
+                if (await connect.OpenLightStrip(state))
+                {
+                    UpdateState();
+                }
+            }
+            finally
+            {
+                operationLock.Release();
             }
         }
         private async void OpenBtn_CheckedChanged(object sender, EventArgs e)
@@ -293,7 +323,7 @@ namespace mi_lightstrip_controller
             }
             else
             {
-                logText.Text = error + ", 重试: " + reNumber;
+                AppendLog(error + ", 重试: " + reNumber);
             }
         }
         private void ExecuteCommandSuccess(string text, string response)
@@ -309,20 +339,34 @@ namespace mi_lightstrip_controller
             }
             else
             {
-                logText.Text = text + "\r\n" + response;
+                AppendLog(text + "\r\n" + response);
             }
         }
-        private void NormalModeToggle_CheckedChanged(object sender, EventArgs e)
+        private void AppendLog(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            string line = $"[{DateTime.Now:HH:mm:ss}] {text}";
+            if (!string.IsNullOrWhiteSpace(logText.Text))
+            {
+                logText.AppendText("\r\n\r\n");
+            }
+            logText.AppendText(line);
+        }
+        private async void NormalModeToggle_CheckedChanged(object sender, EventArgs e)
         {
             normalPanel.Visible = normalModeToggle.Checked;
             if (normalModeToggle.Checked)
-                SetMode(LightstripMode.Normal);
+                await SetMode(LightstripMode.Normal);
         }
-        private void PureModeToggle_CheckedChanged(object sender, EventArgs e)
+        private async void PureModeToggle_CheckedChanged(object sender, EventArgs e)
         {
             purePanel.Visible = pureModeToggle.Checked;
             if (pureModeToggle.Checked)
-                SetMode(LightstripMode.PureColor);
+                await SetMode(LightstripMode.PureColor);
         }
         private async void IntensityTrackBar_Scroll(object sender, EventArgs e)
         {
