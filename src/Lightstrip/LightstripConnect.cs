@@ -64,6 +64,19 @@ namespace mi_lightstrip_controller.src.Lightstrip
             }
             return false;
         }
+        public bool TryOpenLightStripForShutdown(bool isOpen)
+        {
+            if (com == null) return false;
+
+            var res = com.SendComOnce("set_power " + (isOpen ? "1" : "0"), false);
+            if (res == null || res.IsError)
+            {
+                return false;
+            }
+
+            State = isOpen;
+            return true;
+        }
         public void SetCallback(Action<string, string> successAction, Action<string, int> errorAction)
         {
             this.successAction = successAction;

@@ -56,6 +56,51 @@ namespace mi_lightstrip_controller.src.Com
             await Task.Run(() => SendComTask(command, cts, hasResponse, success, error), cts.Token);
             return response;
         }
+        public SendReponse SendComOnce(string command, bool hasResponse)
+        {
+            if (cts != null)
+            {
+                cts.Cancel();
+                cts = null;
+            }
+
+            var response = new SendReponse();
+            try
+            {
+                using (var serialPort = new SerialPort())
+                {
+                    serialPort.PortName = name;        // 串口名称
+                    serialPort.BaudRate = BaudRate;    // 波特率
+                    serialPort.DataBits = DataBits;    // 数据位
+                    serialPort.StopBits = StopBits;    // 停止位
+                    serialPort.Parity = Parity;        // 校验位
+                    serialPort.NewLine = "\r\n";
+                    try
+                    {
+                        serialPort.Open();
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        throw new UnauthorizedAccessException("串口被占用: " + name);
+                    }
+
+                    serialPort.WriteLine(command);
+                    Thread.Sleep(300);
+                    response.res = serialPort.ReadExisting();
+                    if (hasResponse && string.IsNullOrEmpty(response.res))
+                    {
+                        throw new Exception("串口未响应");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                response.error = e.Message;
+                response.errCount = 1;
+            }
+
+            return response;
+        }
         private void SendComTask(string command, CancellationTokenSource cts, bool hasResponse, Action<string> successAction, Action<string, int> errorAction)
         {
             int errorCount = 0;

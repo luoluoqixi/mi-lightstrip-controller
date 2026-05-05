@@ -12,8 +12,12 @@ namespace mi_lightstrip_controller
 {
     public partial class MainWindow : Form
     {
+        private const int WM_QUERYENDSESSION = 0x11;
+        private const int WM_ENDSESSION = 0x16;
+
         public LightstripConnect connect;
         private bool isSyncingPowerState;
+        private bool isSystemShutdownClosing;
         private readonly SemaphoreSlim operationLock = new SemaphoreSlim(1, 1);
 
         public MainWindow()
@@ -251,6 +255,12 @@ namespace mi_lightstrip_controller
         }
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (e.CloseReason == CloseReason.WindowsShutDown || isSystemShutdownClosing)
+            {
+                AutoCloseForSystemShutdown();
+                return;
+            }
+
             if (Setting.Instance.ClickCloseMinimize)
             {
                 e.Cancel = true;
@@ -302,11 +312,24 @@ namespace mi_lightstrip_controller
                 await connect?.OpenLightStrip(false, false);
             }
         }
+        private void AutoCloseForSystemShutdown()
+        {
+            if (isSystemShutdownClosing)
+            {
+                return;
+            }
+
+            isSystemShutdownClosing = true;
+            if (Setting.Instance.AutoCloseLightStrip)
+            {
+                connect?.TryOpenLightStripForShutdown(false);
+            }
+        }
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == 0x11) // 关机
+            if (m.Msg == WM_QUERYENDSESSION || m.Msg == WM_ENDSESSION)
             {
-                AutoClose();
+                AutoCloseForSystemShutdown();
             }
             base.WndProc(ref m);
         }
